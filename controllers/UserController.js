@@ -82,4 +82,8 @@ const UserLogin = (req,res) => {
 
 }
 
+const UserVerify = (req,res) => {
+    // implement logic to verify user
+}
+
 export {UserSignup,UserLogin};
