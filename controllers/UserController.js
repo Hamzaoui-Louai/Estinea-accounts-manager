@@ -144,6 +144,18 @@ const hashPassword = async (password) => {
     return hashedPassword;
 }
 
+const userTokenExistsandValid = async (token) => {
+    const User = await user.findOne({ token })
+    if(User !== null){
+        return true        
+    }
+    return false
+}
+
+const updateUserVerficationStatus = async (token) => {
+    await user.findOneAndUpdate({verificationToken : token},{verificationToken : null,verificationStatus:"verified"})
+}
+
 //exportable functions
 
 const UserSignup = async (req,res) => {
@@ -190,7 +202,22 @@ const UserLogin = (req,res) => {
 }
 
 const UserVerify = (req,res) => {
-    // implement logic to verify user
+    try{
+        const {token:requestToken} = req.query;
+        if(!userTokenExistsandValid(requestToken))
+        {
+            res.status(400).json({error: "Invalid link"})
+            return
+        }
+        updateUserVerficationStatus(requestToken)
+        res.status(200).send(`
+            <script>window.close();</script>
+            `)
+    }
+    catch (error){
+        res.status(500).json({error: "something went wrong"})
+        console.log(error)
+    }
 }
 
-export {UserSignup,UserLogin};
+export {UserSignup,UserLogin,UserVerify};
