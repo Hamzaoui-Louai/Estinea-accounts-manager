@@ -109,6 +109,14 @@ const mailExists = async (mail) => {
     return false
 }
 
+const passwordIsCorrect = async (mail,password) => {
+    const User = await user.findOne({ mail })
+    if(User !== null && hashPassword(password) === User.passwordHash){
+        return true        
+    }
+    return false
+}
+
 const addUser = async (mail,hashedPassword,nickname,verificationToken) => {
     const finalNickname = nickname || mail.split('@')[0].split('_')[1]
     user.create({
@@ -198,7 +206,18 @@ const UserSignup = async (req,res) => {
 }
 
 const UserLogin = (req,res) => {
-
+    try{
+        const {mail,password} = req.body;
+        if(!passwordIsCorrect(mail,password))
+        {
+            res.status(400).json({error:"your email or password are incorrect"})
+        }
+    }
+    catch (error)
+    {
+        res.status(500).json({error: "something went wrong"})
+        console.log(error)
+    }
 }
 
 const UserVerify = (req,res) => {
