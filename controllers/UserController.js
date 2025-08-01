@@ -1,6 +1,10 @@
 import bcrypt from 'bcrypt'
 import user from '../models/User.js'
 import crypto from 'crypto';
+import nodemailer from 'nodemailer'
+import dotenv from 'dotenv'
+
+dotenv.config({ path: '../.env' })
 
 //internal functions
 
@@ -9,7 +13,7 @@ const generateToken = () => {
 };
 
 const getEmailTemplateWithToken = (name,token) => {
-    const verificationUrl = `${env.process.CURRENT_URL}:${PORT}/user/verifymail?token=${token}`
+    const verificationUrl = `${process.env.CURRENT_URL}:${process.env.PORT}/user/verifymail?token=${token}`
     const template = `<!DOCTYPE html>
 <html>
     <head>
@@ -80,25 +84,39 @@ const getEmailTemplateWithToken = (name,token) => {
 return template;
 }
 
-const sendVerificationEmail = () => {
-
+const sendVerificationEmail = async (mail,template) => {
+    console.log(process.env.GMAIL_AGENT)
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.MAIL_AGENT,
+            pass: process.env.MAIL_AGENT_PASSWORD,
+        },
+    });
+    await transporter.sendMail({
+        from: `Estinea` ,
+        to: mail,
+        subject: 'Verify your Estinea account',
+        html: template
+    });
 }
 
 const mailExists = async (mail) => { 
     const User = await user.findOne({ mail })
-    console.log(User)
     if(User !== null){        
         return true        
     }
     return false
 }
 
-const addUser = async (mail,hashedPassword,nickname) => {
+const addUser = async (mail,hashedPassword,nickname,verificationToken) => {
     const finalNickname = nickname || mail.split('@')[0].split('_')[1]
     user.create({
         mail: mail,
         passwordHash: hashedPassword,
-        nickName: finalNickname
+        nickName: finalNickname,
+        verificationStatus: "unverified",
+        verificationToken: verificationToken
     })
 }
 
@@ -148,11 +166,19 @@ const UserSignup = async (req,res) => {
             return
         }
         const hashedPassword = await hashPassword(password);
-        await addUser(mail,hashedPassword,nickname)
+        console.log("password hashed")
+        const userToken = generateToken();
+        console.log("token generated")
+        const mailTemplate = getEmailTemplateWithToken(nickname,userToken)
+        console.log("template injected")
+        await sendVerificationEmail(mail,mailTemplate)
+        console.log("mail sent")
+        await addUser(mail,hashedPassword,nickname,userToken)
         res.status(201).json({message: "user added successfully"})
     }
-    catch{
+    catch (error){
         res.status(500).json({error: "something went wrong"})
+        console.log(error)
         return
     }
     
