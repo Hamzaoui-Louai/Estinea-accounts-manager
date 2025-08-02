@@ -3,6 +3,7 @@ import user from '../models/User.js'
 import crypto from 'crypto';
 import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
+import jwt from 'jsonwebtoken'
 
 dotenv.config({ path: '../.env' })
 
@@ -164,6 +165,12 @@ const updateUserVerficationStatus = async (token) => {
     await user.findOneAndUpdate({verificationToken : token},{verificationToken : null,verificationStatus:"verified"})
 }
 
+const createJWT = (mail)=>{
+    const token = jwt.sign({mail:mail},process.env.JWT_SECRET,{expiresIn:"7d"})
+    console.log(token)
+    return token;
+}
+
 //exportable functions
 
 const UserSignup = async (req,res) => {
@@ -211,7 +218,10 @@ const UserLogin = (req,res) => {
         if(!passwordIsCorrect(mail,password))
         {
             res.status(400).json({error:"your email or password are incorrect"})
+            return
         }
+        const jwt = createJWT(mail);
+        res.status(200).json({token:jwt})
     }
     catch (error)
     {
