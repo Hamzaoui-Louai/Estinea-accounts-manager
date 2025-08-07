@@ -110,9 +110,40 @@ const mailExists = async (mail) => {
     return false
 }
 
+const loginInfoAreValidForm = (mail,password) => {
+    if (mail === '' || password === '') {
+        console.log('mail or password are empty')
+        return false;
+    }
+    if(mail.split('@')[1] !== 'estin.dz')
+    {
+        console.log('mail not from estin')
+        return false;
+    }
+    if(password.length<8)
+    {
+        console.log('password too short')
+        return false;
+    }
+    return true;
+}
+
 const passwordIsCorrect = async (mail,password) => {
+    if(!loginInfoAreValidForm(mail,password))
+    {       
+        console.log('info are incorrect')
+        return false;
+    }
     const User = await user.findOne({ mail })
-    if(User !== null && hashPassword(password) === User.passwordHash){
+    if(User !== null && await bcrypt.compare(password,User.passwordHash)){
+        return true        
+    }
+    return false
+}
+
+const userVerified = async (mail) => {
+    const User = await user.findOne({ mail })
+    if(User !== null && User.verificationStatus==="verified"){
         return true        
     }
     return false
@@ -212,12 +243,19 @@ const UserSignup = async (req,res) => {
 
 }
 
-const UserLogin = (req,res) => {
+const UserLogin = async (req,res) => {
     try{
         const {mail,password} = req.body;
-        if(!passwordIsCorrect(mail,password))
+        console.log(mail)
+        console.log(password)
+        if(!await passwordIsCorrect(mail,password))
         {
             res.status(400).json({error:"your email or password are incorrect"})
+            return
+        }
+        if(!await userVerified(mail))
+        {
+            res.status(400).json({error:"you're not verified , please check your mail box or spam"})
             return
         }
         const jwt = createJWT(mail);
@@ -226,7 +264,7 @@ const UserLogin = (req,res) => {
     catch (error)
     {
         res.status(500).json({error: "something went wrong"})
-        console.log(error)
+        //console.log(error)
     }
 }
 
