@@ -2,6 +2,8 @@ import express from 'express';
 import mongoose from 'mongoose';
 import 'dotenv/config'
 
+import { getUserMailFromToken } from './middleware/authMiddleware.js';
+
 import userRoutes from './routes/userRoutes.js'
 
 const app = express();
@@ -12,6 +14,8 @@ mongoose.connect(process.env.DB_URI)
 .catch(err => console.error('❌ MongoDB connection error:', err));
 
 app.use(express.json())
+
+app.use(getUserMailFromToken)
 
 //routes
 

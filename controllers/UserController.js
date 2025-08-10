@@ -202,6 +202,12 @@ const createJWT = (mail)=>{
     return token;
 }
 
+const getUserInfoFromMail = async (mail) => {
+    const userInfo = await user.findOne({ mail },'-passwordHash -verificationStatus -verificationToken -_id -__v');
+    console.log(userInfo)
+    return userInfo;
+}
+
 //exportable functions
 
 const UserSignup = async (req,res) => {
@@ -287,4 +293,14 @@ const UserVerify = (req,res) => {
     }
 }
 
-export {UserSignup,UserLogin,UserVerify};
+const getUserInfo = async (req,res) => {
+    try{
+        const data = await getUserInfoFromMail(req.userMail)
+        res.status(200).json(data)
+    }
+    catch(error){
+        res.status(500)
+    }
+}
+
+export {UserSignup,UserLogin,UserVerify,getUserInfo};
