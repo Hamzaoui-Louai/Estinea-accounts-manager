@@ -312,7 +312,7 @@ const verifyToken = async (req,res) => {
     }
     catch(error)
     {
-        if (err.name === 'TokenExpiredError') {
+        if (error.name === 'TokenExpiredError') {
             res.status(401).json({error:'the token is expired'})
         }
         else
