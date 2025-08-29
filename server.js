@@ -6,6 +6,8 @@ import { getUserMailFromToken } from './middleware/authMiddleware.js';
 
 import userRoutes from './routes/userRoutes.js'
 
+import authRoutes from './routes/authRoutes.js'
+
 const app = express();
 const port = process.env.PORT
 
@@ -14,6 +16,8 @@ mongoose.connect(process.env.DB_URI)
 .catch(err => console.error('❌ MongoDB connection error:', err));
 
 app.use(express.json())
+
+app.use('/auth',authRoutes)
 
 app.use(getUserMailFromToken)
 
