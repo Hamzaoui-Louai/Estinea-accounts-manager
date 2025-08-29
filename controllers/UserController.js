@@ -303,4 +303,23 @@ const getUserInfo = async (req,res) => {
     }
 }
 
-export {UserSignup,UserLogin,UserVerify,getUserInfo};
+const verifyToken = async (req,res) => {
+    try{
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        jwt.verify(token, process.env.JWT_SECRET)
+        res.status(200).json({message:'token is valid'})
+    }
+    catch(error)
+    {
+        if (err.name === 'TokenExpiredError') {
+            res.status(401).json({error:'the token is expired'})
+        }
+        else
+        {
+            res.status(401).json({error:'the token is not valid'})
+        }
+    }
+}
+
+export {UserSignup,UserLogin,UserVerify,getUserInfo,verifyToken};

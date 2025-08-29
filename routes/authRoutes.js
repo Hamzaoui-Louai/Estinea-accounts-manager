@@ -1,7 +1,9 @@
 import express from "express";
-import { UserSignup , UserLogin , UserVerify } from "../controllers/UserController.js"
+import { UserSignup , UserLogin , UserVerify , verifyToken } from "../controllers/UserController.js"
 
 const router = express.Router()
+
+router.get("/verifytoken",verifyToken)
 
 router.post("/signup",UserSignup)
 

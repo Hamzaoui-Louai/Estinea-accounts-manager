@@ -1,7 +1,9 @@
 import express from "express";
-import { getUserInfo } from "../controllers/UserController.js"
+import { getUserInfo , verifyToken } from "../controllers/UserController.js"
 
 const router = express.Router()
+
+router.get("/verifytoken",verifyToken)
 
 router.get("/getuserdata",getUserInfo)
 
