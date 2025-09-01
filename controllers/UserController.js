@@ -208,6 +208,24 @@ const getUserInfoFromMail = async (mail) => {
     return userInfo;
 }
 
+function filterBody(body) {
+    const allowedUpdates = ["nickName"];
+    const filtered = {};
+    for (const key of allowedUpdates) {
+        if (body[key] !== undefined) {
+            filtered[key] = body[key];
+        }
+    }
+return filtered;
+}
+
+const modifyUserInfoForMail = async (mail,data) => {
+    const filteredUserInfo = filterBody(data)
+    const newUserInfo = await user.findOneAndUpdate({ mail },{$set:filteredUserInfo},{new:true});4
+    const filteredNewUserInfo = filterBody(newUserInfo)
+    return filteredNewUserInfo;
+}
+
 //exportable functions
 
 const UserSignup = async (req,res) => {
@@ -294,8 +312,20 @@ const UserVerify = (req,res) => {
 }
 
 const getUserInfo = async (req,res) => {
+    console.log('getting data')
     try{
         const data = await getUserInfoFromMail(req.userMail)
+        res.status(200).json(data)
+    }
+    catch(error){
+        res.status(500)
+    }
+}
+
+const modifyUserInfo = async (req,res) => {
+    console.log('modifying data')
+    try{
+        const data = await modifyUserInfoForMail(req.userMail,req.body)
         res.status(200).json(data)
     }
     catch(error){
@@ -322,4 +352,4 @@ const verifyToken = async (req,res) => {
     }
 }
 
-export {UserSignup,UserLogin,UserVerify,getUserInfo,verifyToken};
+export {UserSignup,UserLogin,UserVerify,getUserInfo,modifyUserInfo,verifyToken};
