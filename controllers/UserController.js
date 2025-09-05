@@ -221,9 +221,14 @@ return filtered;
 
 const modifyUserInfoForMail = async (mail,data) => {
     const filteredUserInfo = filterBody(data)
-    const newUserInfo = await user.findOneAndUpdate({ mail },{$set:filteredUserInfo},{new:true});4
+    const newUserInfo = await user.findOneAndUpdate({ mail },{$set:filteredUserInfo},{new:true});
     const filteredNewUserInfo = filterBody(newUserInfo)
     return filteredNewUserInfo;
+}
+
+const modifyUserPasswordForMail = async (mail,newPassword) => {
+    const hashedPassword = await hashPassword(newPassword)
+    await user.findOneAndUpdate({mail},{passwordHash:hashedPassword});
 }
 
 //exportable functions
@@ -329,7 +334,40 @@ const modifyUserInfo = async (req,res) => {
         res.status(200).json(data)
     }
     catch(error){
-        res.status(500)
+        res.status(500).json({message:`an unknown server error has occured , error code : ${error.code}`})
+    }
+}
+
+const modifyUserPassword = async (req,res) => {
+    try{
+        const oldPassword = req.body?.oldPassword || ''
+        const newPassword = req.body?.newPassword || ''
+        const mail = req.userMail
+        console.log('got data')
+        if(newPassword.length < 8)
+        {
+            res.status(400).json({error:'password is too short'})
+            console.log('password too short')
+            return
+        }
+        if(await passwordIsCorrect(mail,oldPassword))
+        {
+            console.log('password correct')
+            await modifyUserPasswordForMail(mail,newPassword)
+            console.log('password changed')
+            res.status(200).json({message:'password changed successfully'})
+        }
+        else
+        {
+            console.log('password incorrect')
+            res.status(400).json({error:'current password is incorrect'})
+        }
+    }
+    catch(error)
+    {
+        console.log('server error')
+        console.log(error)
+        res.status(500).json({error:`an unknown server error has occured , error code : ${error.code}`})
     }
 }
 
@@ -352,4 +390,4 @@ const verifyToken = async (req,res) => {
     }
 }
 
-export {UserSignup,UserLogin,UserVerify,getUserInfo,modifyUserInfo,verifyToken};
+export {UserSignup,UserLogin,UserVerify,getUserInfo,modifyUserInfo,verifyToken,modifyUserPassword};
